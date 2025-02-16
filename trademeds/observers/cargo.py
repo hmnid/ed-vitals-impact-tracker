@@ -8,6 +8,12 @@ from ..models.entities import (
     MissionFactionEffect, 
     CargoSession
 )
+from ..journal.events import (
+    MarketEvent,
+    MarketSellEvent,
+    MissionCompletedEvent,
+    LoadGameEvent
+)
 
 class CargoSessionBuilder:
     def __init__(self):
@@ -50,66 +56,65 @@ class VitalsCargoSessionCollector:
         self.sessions: list[CargoSession] = []
         self.merges_remain = merges
 
-    def handle_event(self, event_type: str, event: dict):
-        # Update timestamp for every event
-        self.session_builder.observe_event_time(datetime.fromisoformat(event['timestamp']))
+    def handle_event(self, event):
+        # All events have timestamp as datetime
+        self.session_builder.observe_event_time(event.timestamp)
 
-        if event_type == 'Market':
-            self.markets[event['MarketID']] = Market(
-                market_id=event['MarketID'],
-                station_name=event['StationName'],
-                system_name=event['StarSystem'],
-                is_carrier=event['StationType'] == 'FleetCarrier'
+        if isinstance(event, MarketEvent):
+            self.markets[event.market_id] = Market(
+                market_id=event.market_id,
+                station_name=event.station_name,
+                system_name=event.star_system,
+                is_carrier=event.station_type == 'FleetCarrier'
             )
-        elif event_type == 'LoadGame':
+        elif isinstance(event, LoadGameEvent):
             if self.merges_remain:
                 self.merges_remain -= 1
             else:
-                started_at = datetime.fromisoformat(event['timestamp'])
-                self.sessions.append(self.session_builder.build(started_at=started_at))
-        elif event_type == 'MarketSell':
+                self.sessions.append(self.session_builder.build(started_at=event.timestamp))
+        elif isinstance(event, MarketSellEvent):
             self.session_builder.sell(
-                market_id=event['MarketID'],
-                good=event['Type'],
-                count=event['Count']
+                market_id=event.market_id,
+                good=event.type,
+                count=event.count
             )
-        elif event_type == 'MissionCompleted':
+        elif isinstance(event, MissionCompletedEvent):
             mission = self._create_mission(event)
             if mission:
                 self.session_builder.complete_mission(mission)
 
-    def _create_mission(self, event: dict) -> Mission | None:
-        if 'Commodity' in event:
+    def _create_mission(self, event: MissionCompletedEvent) -> Mission | None:
+        if hasattr(event, 'commodity'):
             return CargoMission(
-                mission_id=event['MissionID'],
-                title=event['LocalisedName'],
-                technical_name=event['Name'],
-                faction=event['Faction'],
-                system=event['DestinationSystem'],
-                station=event.get('DestinationStation'),
-                effects=self._create_effects(event['FactionEffects']),
-                good=event['Commodity_Localised'],
-                count=event['Count'],
+                mission_id=event.mission_id,
+                title=event.localised_name,
+                technical_name=event.name,
+                faction=event.faction,
+                system=event.destination_system,
+                station=event.destination_station,
+                effects=self._create_effects(event.faction_effects),
+                good=event.commodity_localised,
+                count=event.count,
             )
-        if 'Donated' in event:
+        if hasattr(event, 'donated'):
             return DonationMission(
-                mission_id=event['MissionID'],
-                title=event['LocalisedName'],
-                technical_name=event['Name'],
-                faction=event['Faction'],
-                effects=self._create_effects(event['FactionEffects']),
-                donated=event['Donated'],
+                mission_id=event.mission_id,
+                title=event.localised_name,
+                technical_name=event.name,
+                faction=event.faction,
+                effects=self._create_effects(event.faction_effects),
+                donated=event.donated,
             )
         return None
 
-    def _create_effects(self, faction_effects: list) -> list[MissionFactionEffect]:
+    def _create_effects(self, faction_effects) -> list[MissionFactionEffect]:
         return [
             MissionFactionEffect(
-                faction=feffect['Faction'],
-                effect=effect['Effect'],
-                effect_localised=effect['Effect_Localised'],
-                trend=effect['Trend'],
+                faction=feffect.faction,
+                effect=effect.effect,
+                effect_localised=effect.effect_localised,
+                trend=effect.trend,
             )
             for feffect in faction_effects 
-            for effect in feffect['Effects']
+            for effect in feffect.effects
         ] 
