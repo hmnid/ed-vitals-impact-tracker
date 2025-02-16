@@ -1,78 +1,6 @@
+from collections import defaultdict
+from dataclasses import dataclass, field
 from ..models.entities import Market, CargoSession, CargoMission, DonationMission
-
-def localise_mission_faction_effect(t):
-    if t == '$MISSIONUTIL_Interaction_Summary_Outbreak_down;':
-        return 'OUTBREAK_DOWN'
-    if t == '$MISSIONUTIL_Interaction_Summary_EP_up;':
-        return 'ECONOMY_POWER_UP'
-    if t == '$MISSIONUTIL_Interaction_Summary_SP_up;':
-        return 'SECURITY_UP'
-    return t
-
-def missions_repr(missions):
-    from collections import defaultdict
-    from dataclasses import dataclass, field
-
-    @dataclass
-    class MissionSummary:
-        count: int = 0
-        effects: dict[str, int] = field(default_factory=lambda: defaultdict(int))
-        aux_effects: dict[str, dict[str, int]] = field(default_factory=lambda: defaultdict(lambda: defaultdict(int)))
-
-    @dataclass
-    class CargoMissionSummary(MissionSummary):
-        goods: dict[str, int] = field(default_factory=lambda: defaultdict(int))
-
-    @dataclass
-    class DonationMissionSummary(MissionSummary):
-        donated: int = 0
-
-    type_to_summary = {CargoMission: CargoMissionSummary, DonationMission: DonationMissionSummary}
-    aggr = defaultdict(dict)
-    
-    for mission in missions:
-        summary = type_to_summary[type(mission)]()
-        summary.count += 1
-        
-        for effect in mission.effects:
-            effect_name = localise_mission_faction_effect(effect.effect_localised)
-            if effect.faction == mission.faction:
-                summary.effects[effect_name] += 1
-            else:
-                summary.aux_effects[effect.faction][effect_name] += 1
-
-        if isinstance(mission, CargoMission):
-            summary.goods[mission.good] += mission.count
-        elif isinstance(mission, DonationMission):
-            summary.donated += mission.donated
-
-        aggr[mission.mission_id][type(mission)] = summary
-
-    for mission_id, summaries in aggr.items():
-        print(f'Mission {mission_id}:')
-        for summary_type, summary in summaries.items():
-            print(f'    {summary_type.__name__}:')
-            print(f'        count: {summary.count}')
-            
-            if summary.effects:
-                print('        effects:')
-                for effect, count in summary.effects.items():
-                    print(f'            {effect}: {count}')
-            
-            if summary.aux_effects:
-                print('        aux effects:')
-                for faction, effects in summary.aux_effects.items():
-                    print(f'            {faction}:')
-                    for effect, count in effects.items():
-                        print(f'                {effect}: {count}')
-            
-            if isinstance(summary, CargoMissionSummary) and summary.goods:
-                print('        goods:')
-                for good, count in summary.goods.items():
-                    print(f'            {good}: {count}')
-            
-            if isinstance(summary, DonationMissionSummary) and summary.donated:
-                print(f'        donated: {summary.donated}')
 
 class SessionView:
     def __init__(self, markets: dict[int, Market]):
@@ -109,4 +37,62 @@ class SessionView:
         if not session.missions:
             return
         print(f'    Missions:')
-        missions_repr(session.missions) 
+        self._missions_repr(session.missions)
+
+    def _localise_mission_faction_effect(self, t):
+        if t == '$MISSIONUTIL_Interaction_Summary_Outbreak_down;':
+            return 'OUTBREAK_DOWN'
+        if t == '$MISSIONUTIL_Interaction_Summary_EP_up;':
+            return 'ECONOMY_POWER_UP'
+        if t == '$MISSIONUTIL_Interaction_Summary_SP_up;':
+            return 'SECURITY_UP'
+        return t
+
+    def _missions_repr(self, missions):
+        @dataclass
+        class MissionSummary:
+            count: int = 0
+            effects: dict[str, int] = field(default_factory=lambda: defaultdict(int))
+            aux_effects: dict[str, dict[str, int]] = field(default_factory=lambda: defaultdict(lambda: defaultdict(int)))
+
+        @dataclass
+        class CargoMissionSummary(MissionSummary):
+            goods: dict[str, int] = field(default_factory=lambda: defaultdict(int))
+
+        @dataclass
+        class DonationMissionSummary(MissionSummary):
+            donated: int = 0
+
+        type_to_summary = {CargoMission: CargoMissionSummary, DonationMission: DonationMissionSummary}
+        aggr = defaultdict(dict)
+        
+        for mission in missions.values():
+            if mission.technical_name not in aggr[mission.faction]:
+                aggr[mission.faction][mission.technical_name] = type_to_summary[type(mission)]()
+
+            mtype_aggr = aggr[mission.faction][mission.technical_name]
+            mtype_aggr.count += 1
+            if isinstance(mission, CargoMission):
+                mtype_aggr.goods[mission.good] += mission.count
+            elif isinstance(mission, DonationMission):
+                mtype_aggr.donated += mission.donated
+            else:
+                raise ValueError('Unknown mission type')
+
+            for faction_effect in mission.effects:
+                effect_aggr = mtype_aggr.effects
+                if faction_effect.faction != mission.faction:
+                    effect_aggr = mtype_aggr.aux_effects[faction_effect.faction]
+
+                effect_aggr[faction_effect.effect] += 1
+
+        for faction, mission_types in aggr.items():
+            print(' ' * 8 + f'Faction <{faction}>:')
+            for mission_type, summary in mission_types.items():
+                faction_effects = '; '.join([f'{self._localise_mission_faction_effect(effect)} x {count}' for effect, count in summary.effects.items()])
+                print(' ' * 12 + f'{mission_type} x {summary.count}: {faction_effects}')
+                if isinstance(summary, CargoMissionSummary):
+                    for good, amount in summary.goods.items():
+                        print(' ' * 16 + f'{good}: {amount}')
+                elif isinstance(summary, DonationMissionSummary):
+                    print(' ' * 16 + f'Donated: {summary.donated} cr') 

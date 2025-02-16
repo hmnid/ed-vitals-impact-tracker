@@ -1,6 +1,13 @@
 from collections import defaultdict
 from datetime import datetime
-from ..models.entities import Market, CargoMission, DonationMission, Mission, MissionFactionEffect, CargoSession
+from ..models.entities import (
+    Market, 
+    CargoMission, 
+    DonationMission, 
+    Mission, 
+    MissionFactionEffect, 
+    CargoSession
+)
 
 class CargoSessionBuilder:
     def __init__(self):

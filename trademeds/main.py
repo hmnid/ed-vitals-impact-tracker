@@ -1,8 +1,8 @@
 import os
 import argparse
-from observers.base import JournalEventTraverser
-from observers.cargo import VitalsCargoSessionCollector
-from viewers.session import SessionView
+from .observers.base import JournalEventTraverser
+from .observers.cargo import VitalsCargoSessionCollector
+from .viewers.session import SessionView
 
 journal_path = os.path.join(os.environ['USERPROFILE'], 'Saved Games\\Frontier Developments\\Elite Dangerous\\')
 
