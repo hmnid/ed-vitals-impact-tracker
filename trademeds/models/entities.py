@@ -42,6 +42,7 @@ class DonationMission(Mission):
 @dataclass
 class CargoSession:
     started_at: datetime
+    ended_at: datetime
     sold: dict[int, dict[str, int]]
     bought: dict[int, dict[str, int]]
     missions: dict[int, CargoMission] 

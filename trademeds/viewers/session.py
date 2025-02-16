@@ -12,7 +12,7 @@ class SessionView:
             print('')
 
     def display_session(self, session: CargoSession):
-        print(f'VITAL Session {session.started_at.isoformat()}')
+        print(f'VITAL Session {session.started_at.isoformat()} - {session.ended_at.isoformat()}')
         self._display_sales(session)
         self._display_missions(session)
 

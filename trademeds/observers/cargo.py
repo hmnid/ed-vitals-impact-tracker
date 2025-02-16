@@ -17,6 +17,11 @@ class CargoSessionBuilder:
         self.sold = defaultdict(lambda: defaultdict(int))
         self.bought = defaultdict(lambda: defaultdict(int))
         self.missions = {}
+        self.last_event_at = None  # This is chronologically the last event in the session
+
+    def observe_event_time(self, timestamp: datetime) -> None:
+        if self.last_event_at is None:  # We see it first when traversing, but it's the last event chronologically
+            self.last_event_at = timestamp
 
     def sell(self, good: str, count: int, market_id: int = -1) -> None:
         self.sold[market_id][good] += count
@@ -29,7 +34,8 @@ class CargoSessionBuilder:
 
     def build(self, started_at: datetime) -> CargoSession:
         instance = CargoSession(
-            started_at=started_at,
+            started_at=started_at,  # From LoadGame event
+            ended_at=self.last_event_at or started_at,  # Chronologically last event
             bought=self.bought,
             sold=self.sold,
             missions=self.missions,
@@ -45,6 +51,9 @@ class VitalsCargoSessionCollector:
         self.merges_remain = merges
 
     def handle_event(self, event_type: str, event: dict):
+        # Update timestamp for every event
+        self.session_builder.observe_event_time(datetime.fromisoformat(event['timestamp']))
+
         if event_type == 'Market':
             self.markets[event['MarketID']] = Market(
                 market_id=event['MarketID'],
