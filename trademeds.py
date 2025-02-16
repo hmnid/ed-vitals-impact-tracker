@@ -198,96 +198,161 @@ def session_repr(session: CargoSession, markets: dict[int, Market]):
                     faction_effects = '; '.join([f'{localise_mission_faction_effect(effect)} x {count}' for effect, count in effects.items()])
                     print(f'            {faction}: {faction_effects}')
 
+
+class JournalEventTraverser:
+    def __init__(self, journal_path: str):
+        self.journal_path = journal_path
+        self.observers = []
+
+    def add_observer(self, observer):
+        self.observers.append(observer)
+
+    def traverse(self, max_sessions: int = 5):
+        sessions_found = 0
+
+        for dr in sorted(os.listdir(self.journal_path), reverse=True):
+            if not dr.startswith('Journal.'):
+                continue
+
+            if sessions_found >= max_sessions:
+                break
+
+            with open(os.path.join(self.journal_path, dr)) as f:
+                for line in reversed(f.readlines()):
+                    event = json.loads(line.strip())
+                    event_type = event['event']
+
+                    if event_type == 'LoadGame':
+                        sessions_found += 1
+                    
+                    for observer in self.observers:
+                        observer.handle_event(event_type, event)
+
+
+class VitalsCargoSessionCollector:
+    def __init__(self, merges: int = 0):
+        self.markets: dict[int, Market] = {}
+        self.session_builder = CargoSessionBuilder()
+        self.sessions: list[CargoSession] = []
+        self.merges_remain = merges
+
+    def handle_event(self, event_type: str, event: dict):
+        if event_type == 'Market':
+            self.markets[event['MarketID']] = Market(
+                market_id=event['MarketID'],
+                station_name=event['StationName'],
+                system_name=event['StarSystem'],
+                is_carrier=event['StationType'] == 'FleetCarrier'
+            )
+        elif event_type == 'LoadGame':
+            if self.merges_remain:
+                self.merges_remain -= 1
+            else:
+                started_at = datetime.fromisoformat(event['timestamp'])
+                self.sessions.append(self.session_builder.build(started_at=started_at))
+        elif event_type == 'MarketSell':
+            self.session_builder.sell(
+                market_id=event['MarketID'],
+                good=event['Type'],
+                count=event['Count']
+            )
+        elif event_type == 'MissionCompleted':
+            mission = self._create_mission(event)
+            if mission:
+                self.session_builder.complete_mission(mission)
+
+    def _create_mission(self, event: dict) -> Mission | None:
+        if 'Commodity' in event:
+            return CargoMission(
+                mission_id=event['MissionID'],
+                title=event['LocalisedName'],
+                technical_name=event['Name'],
+                faction=event['Faction'],
+                system=event['DestinationSystem'],
+                station=event.get('DestinationStation'),
+                effects=self._create_effects(event['FactionEffects']),
+                good=event['Commodity_Localised'],
+                count=event['Count'],
+            )
+        if 'Donated' in event:
+            return DonationMission(
+                mission_id=event['MissionID'],
+                title=event['LocalisedName'],
+                technical_name=event['Name'],
+                faction=event['Faction'],
+                effects=self._create_effects(event['FactionEffects']),
+                donated=event['Donated'],
+            )
+        return None
+
+    def _create_effects(self, faction_effects: list) -> list[MissionFactionEffect]:
+        return [
+            MissionFactionEffect(
+                faction=feffect['Faction'],
+                effect=effect['Effect'],
+                effect_localised=effect['Effect_Localised'],
+                trend=effect['Trend'],
+            )
+            for feffect in faction_effects 
+            for effect in feffect['Effects']
+        ]
+
+
+class SessionView:
+    def __init__(self, markets: dict[int, Market]):
+        self.markets = markets
+
+    def display_sessions(self, sessions: list[CargoSession]):
+        for session in sessions:
+            self.display_session(session)
+            print('')
+
+    def display_session(self, session: CargoSession):
+        print(f'VITAL Session {session.started_at.isoformat()}')
+        self._display_sales(session)
+        self._display_missions(session)
+
+    def _display_sales(self, session: CargoSession):
+        if not session.sold:
+            return
+
+        for market_id, goods in session.sold.items():
+            market = self.markets[market_id]
+            market_name = market.station_name
+            system_name = market.system_name
+            location = f'Carrier {market_name}' if market.is_carrier else f'{system_name} > {market_name}'
+            print(f'    MarketSell at {location}:')
+
+            total = 0
+            for good, count in goods.items():
+                total += count
+                print(f'        {good}: {count}')
+            print(' ' * 8 + f'total: {total}')
+
+    def _display_missions(self, session: CargoSession):
+        if not session.missions:
+            return
+        print(f'    Missions:')
+        missions_repr(session.missions)  # Using existing missions_repr function
+
+
 def main():
     parser = argparse.ArgumentParser(description="Обработка сессий.")
-    
     parser.add_argument('--sessions', type=int, default=5, help='Количество сессий для просмотра')
     parser.add_argument('--merges', type=int, default=0, help='Количество сессий для слияния')
-    
     args = parser.parse_args()
 
-    markets: dict[int, Market] = {}
-    sessions = []
-    market_operations = CargoSessionBuilder()
-    carriers = (3703579136,)
-    supercruise_drops = []
-    maxsessions = args.sessions
-    merges_remain = args.merges
+    # Setup components
+    traverser = JournalEventTraverser(journal_path)
+    collector = VitalsCargoSessionCollector(merges=args.merges)
+    traverser.add_observer(collector)
 
-    for dr in sorted(os.listdir(journal_path), reverse=True):
-        if not dr.startswith('Journal.'):
-            continue
+    # Collect data
+    traverser.traverse(max_sessions=args.sessions)
 
-        if len(sessions) > maxsessions:
-            break
-
-        with open(os.path.join(journal_path, dr)) as f:
-            for line in reversed(f.readlines()):
-                data = json.loads(line.strip())
-                if data['event'] == 'Market':
-                    markets[data['MarketID']] = Market(
-                        market_id=data['MarketID'],
-                        station_name=data['StationName'],
-                        system_name=data['StarSystem'],
-                        is_carrier=data['StationType'] == 'FleetCarrier'
-                    )
-                if data['event'] == 'LoadGame':
-                    if merges_remain:
-                        merges_remain -= 1
-                    else:
-                        started_at = datetime.fromisoformat(data['timestamp'])
-                        sessions.append(market_operations.build(started_at=started_at))
-                if data['event'] == 'MarketSell':
-                    market_id = data['MarketID']
-                    market_operations.sell(market_id=market_id, good=data['Type'], count=data['Count'])
-                if data['event'] == 'MissionCompleted':
-                    mission = None
-                    if 'Commodity' in data:
-                        mission = CargoMission(
-                            mission_id=data['MissionID'],
-                            title=data['LocalisedName'],
-                            technical_name=data['Name'],
-                            faction=data['Faction'],
-                            system=data['DestinationSystem'],
-                            station=data.get('DestinationStation'),
-                            effects=[
-                                MissionFactionEffect(
-                                    faction=feffect['Faction'],
-                                    effect=effect['Effect'],
-                                    effect_localised=effect['Effect_Localised'],
-                                    trend=effect['Trend'],
-                                )
-                                for feffect in data['FactionEffects'] for effect in feffect['Effects']
-                            ],
-                            good=data['Commodity_Localised'],
-                            count=data['Count'],
-                        )
-                    if 'Donated' in data:
-                        mission = DonationMission(
-                            mission_id=data['MissionID'],
-                            title=data['LocalisedName'],
-                            technical_name=data['Name'],
-                            faction=data['Faction'],
-                            effects=[
-                                MissionFactionEffect(
-                                    faction=feffect['Faction'],
-                                    effect=effect['Effect'],
-                                    effect_localised=effect['Effect_Localised'],
-                                    trend=effect['Trend'],
-                                )
-                                for feffect in data['FactionEffects'] for effect in feffect['Effects']
-                            ],
-                            donated=data['Donated'],
-                        )
-
-                    if mission:
-                        market_operations.complete_mission(mission)
-
-    sessions = sessions[:maxsessions]
-
-    for session in sessions:
-        session_repr(session, markets=markets)
-        print('')
+    # Display results
+    view = SessionView(collector.markets)
+    view.display_sessions(collector.sessions[:args.sessions])
 
 if __name__ == "__main__":
     main()
