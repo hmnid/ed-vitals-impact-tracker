@@ -158,47 +158,6 @@ def missions_repr(missions):
                 print(' ' * 16 + f'Donated: {summary.donated} cr')
 
 
-def session_repr(session: CargoSession, markets: dict[int, Market]):
-    print(f'VITAL Session {session.started_at.isoformat()}')
-    if session.sold:
-        for market_id, goods in session.sold.items():
-            market = markets[market_id]
-            market_name = market.station_name
-            system_name = market.system_name
-            location = f'Carrier {market_name}' if market.is_carrier else f'{system_name} > {market_name}'
-            print(f'    MarketSell at {location}:')
-
-            total = 0
-            for good, count in goods.items():
-                total += count
-                print(f'        {good}: {count}')
-            print(' ' * 8 + f'total: {total}')
-
-    if session.missions:
-        print(f'    Missions:')
-        if True:
-            missions_repr(session.missions)
-        else:
-            missions_summary = defaultdict(lambda: {'amount': 0, 'count': 0, 'effects': defaultdict(lambda:defaultdict(int))})
-            for mission in session.missions.values():
-                mission_type = mission.technical_name
-                if isinstance(mission, CargoMission):
-                    mission_type = f'{mission_type} x {mission.good}'
-                    missions_summary[mission_type]['amount'] += mission.count
-                else:
-                    missions_summary[mission_type]['amount'] += mission.donated
-
-                missions_summary[mission_type]['count'] += 1
-                for e in mission.effects:
-                    missions_summary[mission_type]['effects'][e.faction][e.effect] += 1
-
-            for mission_type, desc in missions_summary.items():
-                print(f'        {mission_type} | Amount: {desc['amount']}; Missions: {desc['count']}; Effects:')
-                for faction, effects in desc['effects'].items():
-                    faction_effects = '; '.join([f'{localise_mission_faction_effect(effect)} x {count}' for effect, count in effects.items()])
-                    print(f'            {faction}: {faction_effects}')
-
-
 class JournalEventTraverser:
     def __init__(self, journal_path: str):
         self.journal_path = journal_path
