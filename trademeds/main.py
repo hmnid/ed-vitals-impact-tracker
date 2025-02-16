@@ -1,6 +1,6 @@
 import os
 import argparse
-from .observers.base import JournalEventTraverser
+from .journal import JournalEventTraverser
 from .observers.cargo import VitalsCargoSessionCollector
 from .viewers.session import SessionView
 
