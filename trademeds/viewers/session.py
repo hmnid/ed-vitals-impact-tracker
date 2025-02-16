@@ -1,7 +1,13 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Type
-from ..models.entities import Market, CargoSession, CargoMission, DonationMission, Mission
+from ..models.entities import (
+    Market,
+    CargoSession,
+    CargoMission,
+    DonationMission,
+    Mission,
+)
 
 
 class SessionView:

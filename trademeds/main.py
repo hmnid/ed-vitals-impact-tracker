@@ -10,12 +10,18 @@ journal_path = os.path.join(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Обработка сессий.")
+    parser = argparse.ArgumentParser(description="Process Elite Dangerous sessions.")
     parser.add_argument(
-        "--sessions", type=int, default=5, help="Количество сессий для просмотра"
+        "--sessions",
+        type=int,
+        default=5,
+        help="Number of game sessions to process (each session starts when you log into the game world / LoadGame event)",
     )
     parser.add_argument(
-        "--merges", type=int, default=0, help="Количество сессий для слияния"
+        "--merges",
+        type=int,
+        default=0,
+        help="Number of sessions to combine into one (useful when you have relogged during a vitals run for some reason)",
     )
     args = parser.parse_args()
 
