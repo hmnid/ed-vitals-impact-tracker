@@ -4,13 +4,14 @@ from trademeds.journal.parser import JournalEventParser
 from trademeds.journal.events import (
     LoadGameEvent,
     MarketEvent,
+    MarketBuyEvent,
     MarketSellEvent,
     MissionCompletedEvent,
     FactionEffect,
     FactionEffectGroup,
     MissionAcceptedEvent,
-    MarketBuyEvent
 )
+
 
 class TestJournalParser:
     @pytest.fixture
@@ -37,201 +38,12 @@ class TestJournalParser:
             "Loan": 0,
             "language": "English/UK",
             "gameversion": "4.0.0.1904",
-            "build": "r308767/r0 "
+            "build": "r308767/r0 ",
         }
 
-        expected = LoadGameEvent(
+        expected = LoadGameEvent.model_construct(
             timestamp=datetime(2025, 2, 16, 9, 25, 10, tzinfo=timezone.utc),
-            event="LoadGame"
-        )
-
-        result = parser.parse(raw_event)
-        assert result == expected
-
-    def test_parse_market_sell(self, parser):
-        raw_event = {
-            "timestamp": "2025-02-15T23:58:52Z",
-            "event": "MarketSell",
-            "MarketID": 3228170496,
-            "Type": "performanceenhancers",
-            "Type_Localised": "Performance Enhancers",
-            "Count": 316,
-            "SellPrice": 7188,
-            "TotalSale": 2271408,
-            "AvgPricePaid": 5858
-        }
-
-        expected = MarketSellEvent(
-            timestamp=datetime(2025, 2, 15, 23, 58, 52, tzinfo=timezone.utc),
-            event="MarketSell",
-            market_id=3228170496,
-            type="performanceenhancers",
-            type_localised="Performance Enhancers",
-            count=316,
-            sell_price=7188,
-            total_sale=2271408,
-            avg_price_paid=5858
-        )
-
-        result = parser.parse(raw_event)
-        assert result == expected
-
-    def test_parse_mission_completed_donation(self, parser):
-        raw_event = {
-            "timestamp": "2025-02-14T18:48:59Z",
-            "event": "MissionCompleted",
-            "Faction": "Terran Colonial Forces",
-            "Name": "Mission_AltruismCredits_Outbreak_name",
-            "LocalisedName": "Donate 300,000 Cr to Prevent a Medical Emergency",
-            "MissionID": 1003255884,
-            "Donation": "300000",
-            "Donated": 300000,
-            "FactionEffects": [{
-                "Faction": "Terran Colonial Forces",
-                "Effects": [{
-                    "Effect": "$MISSIONUTIL_Interaction_Summary_Outbreak_down;",
-                    "Effect_Localised": "With fewer reported cases of illness...",
-                    "Trend": "DownGood"
-                }],
-                "Influence": [{
-                    "SystemAddress": 9466779215257,
-                    "Trend": "UpGood",
-                    "Influence": "++"
-                }],
-                "ReputationTrend": "UpGood",
-                "Reputation": "+"
-            }]
-        }
-
-        expected = MissionCompletedEvent(
-            timestamp=datetime(2025, 2, 14, 18, 48, 59, tzinfo=timezone.utc),
-            event="MissionCompleted",
-            faction="Terran Colonial Forces",
-            name="Mission_AltruismCredits_Outbreak_name",
-            localised_name="Donate 300,000 Cr to Prevent a Medical Emergency",
-            mission_id=1003255884,
-            donation="300000",
-            donated=300000,
-            faction_effects=[
-                FactionEffectGroup(
-                    faction="Terran Colonial Forces",
-                    effects=[
-                        FactionEffect(
-                            effect="$MISSIONUTIL_Interaction_Summary_Outbreak_down;",
-                            effect_localised="With fewer reported cases of illness...",
-                            trend="DownGood"
-                        )
-                    ],
-                    influence=[{
-                        "SystemAddress": 9466779215257,
-                        "Trend": "UpGood",
-                        "Influence": "++"
-                    }],
-                    reputation_trend="UpGood",
-                    reputation="+"
-                )
-            ]
-        )
-
-        result = parser.parse(raw_event)
-        assert result == expected
-
-    def test_parse_mission_completed_commodity(self, parser):
-        raw_event = {
-            "timestamp": "2025-02-16T10:12:32Z",
-            "event": "MissionCompleted",
-            "Faction": "Terran Colonial Forces",
-            "Name": "Mission_Delivery_Confederacy_name",
-            "LocalisedName": "Support the confederacy by delivering 36 units of Fish",
-            "MissionID": 1003484014,
-            "Commodity": "$Fish_Name;",
-            "Commodity_Localised": "Fish",
-            "Count": 36,
-            "TargetFaction": "Starlance Alpha",
-            "DestinationSystem": "Aknandan",
-            "DestinationStation": "Gordon Terminal",
-            "Reward": 194465,
-            "FactionEffects": [{
-                "Faction": "Starlance Alpha",
-                "Effects": [{
-                    "Effect": "$MISSIONUTIL_Interaction_Summary_EP_up;",
-                    "Effect_Localised": "The economic status of $#MinorFaction; has improved in the $#System; system.",
-                    "Trend": "UpGood"
-                }],
-                "Influence": [{
-                    "SystemAddress": 2869978015193,
-                    "Trend": "UpGood",
-                    "Influence": "++"
-                }],
-                "ReputationTrend": "UpGood",
-                "Reputation": "+++++"
-            }, {
-                "Faction": "Terran Colonial Forces",
-                "Effects": [{
-                    "Effect": "$MISSIONUTIL_Interaction_Summary_EP_up;",
-                    "Effect_Localised": "The economic status of $#MinorFaction; has improved in the $#System; system.",
-                    "Trend": "UpGood"
-                }],
-                "Influence": [{
-                    "SystemAddress": 9466779215257,
-                    "Trend": "UpGood",
-                    "Influence": "++"
-                }],
-                "ReputationTrend": "UpGood",
-                "Reputation": "+++++"
-            }]
-        }
-
-        expected = MissionCompletedEvent(
-            timestamp=datetime(2025, 2, 16, 10, 12, 32, tzinfo=timezone.utc),
-            event="MissionCompleted",
-            faction="Terran Colonial Forces",
-            name="Mission_Delivery_Confederacy_name",
-            localised_name="Support the confederacy by delivering 36 units of Fish",
-            mission_id=1003484014,
-            commodity="$Fish_Name;",
-            commodity_localised="Fish",
-            count=36,
-            target_faction="Starlance Alpha",
-            destination_system="Aknandan",
-            destination_station="Gordon Terminal",
-            reward=194465,
-            faction_effects=[
-                FactionEffectGroup(
-                    faction="Starlance Alpha",
-                    effects=[
-                        FactionEffect(
-                            effect="$MISSIONUTIL_Interaction_Summary_EP_up;",
-                            effect_localised="The economic status of $#MinorFaction; has improved in the $#System; system.",
-                            trend="UpGood"
-                        )
-                    ],
-                    influence=[{
-                        "SystemAddress": 2869978015193,
-                        "Trend": "UpGood",
-                        "Influence": "++"
-                    }],
-                    reputation_trend="UpGood",
-                    reputation="+++++"
-                ),
-                FactionEffectGroup(
-                    faction="Terran Colonial Forces",
-                    effects=[
-                        FactionEffect(
-                            effect="$MISSIONUTIL_Interaction_Summary_EP_up;",
-                            effect_localised="The economic status of $#MinorFaction; has improved in the $#System; system.",
-                            trend="UpGood"
-                        )
-                    ],
-                    influence=[{
-                        "SystemAddress": 9466779215257,
-                        "Trend": "UpGood",
-                        "Influence": "++"
-                    }],
-                    reputation_trend="UpGood",
-                    reputation="+++++"
-                )
-            ]
+            event="LoadGame",
         )
 
         result = parser.parse(raw_event)
@@ -252,10 +64,10 @@ class TestJournalParser:
             "Expiry": "2025-02-15T18:48:59Z",
             "Influence": "++",
             "Reputation": "++",
-            "MissionID": 1003255884
+            "MissionID": 1003255884,
         }
 
-        expected = MissionAcceptedEvent(
+        expected = MissionAcceptedEvent.model_construct(
             timestamp=datetime(2025, 2, 14, 18, 48, 59, tzinfo=timezone.utc),
             event="MissionAccepted",
             faction="Terran Colonial Forces",
@@ -269,7 +81,7 @@ class TestJournalParser:
             expiry=datetime(2025, 2, 15, 18, 48, 59, tzinfo=timezone.utc),
             influence="++",
             reputation="++",
-            mission_id=1003255884
+            mission_id=1003255884,
         )
 
         result = parser.parse(raw_event)
@@ -293,10 +105,10 @@ class TestJournalParser:
             "Influence": "++",
             "Reputation": "++",
             "Reward": 1368452,
-            "MissionID": 1003484014
+            "MissionID": 1003484014,
         }
 
-        expected = MissionAcceptedEvent(
+        expected = MissionAcceptedEvent.model_construct(
             timestamp=datetime(2025, 2, 16, 9, 41, 53, tzinfo=timezone.utc),
             event="MissionAccepted",
             faction="Terran Colonial Forces",
@@ -313,7 +125,7 @@ class TestJournalParser:
             influence="++",
             reputation="++",
             reward=1368452,
-            mission_id=1003484014
+            mission_id=1003484014,
         )
 
         result = parser.parse(raw_event)
@@ -331,10 +143,10 @@ class TestJournalParser:
             "Wing": False,
             "Influence": "++",
             "Reputation": "++",
-            "MissionID": 1003483922
+            "MissionID": 1003483922,
         }
 
-        expected = MissionAcceptedEvent(
+        expected = MissionAcceptedEvent.model_construct(
             timestamp=datetime(2025, 2, 16, 9, 40, 48, tzinfo=timezone.utc),
             event="MissionAccepted",
             faction="Terran Colonial Forces",
@@ -345,21 +157,195 @@ class TestJournalParser:
             wing=False,
             influence="++",
             reputation="++",
-            mission_id=1003483922
+            mission_id=1003483922,
         )
 
         result = parser.parse(raw_event)
         assert result == expected
 
-    def test_unknown_event_returns_none(self, parser):
+    def test_parse_mission_completed_donation(self, parser):
         raw_event = {
-            "timestamp": "2025-02-14T18:32:41Z",
-            "event": "UnknownEvent",
-            "SomeData": "value"
+            "timestamp": "2025-02-14T18:48:59Z",
+            "event": "MissionCompleted",
+            "Faction": "Terran Colonial Forces",
+            "Name": "Mission_AltruismCredits_Outbreak_name",
+            "LocalisedName": "Donate 300,000 Cr to Prevent a Medical Emergency",
+            "MissionID": 1003255884,
+            "Donation": "300000",
+            "Donated": 300000,
+            "FactionEffects": [
+                {
+                    "Faction": "Terran Colonial Forces",
+                    "Effects": [
+                        {
+                            "Effect": "$MISSIONUTIL_Interaction_Summary_Outbreak_down;",
+                            "Effect_Localised": "With fewer reported cases of illness...",
+                            "Trend": "DownGood",
+                        }
+                    ],
+                    "Influence": [
+                        {
+                            "SystemAddress": 9466779215257,
+                            "Trend": "UpGood",
+                            "Influence": "++",
+                        }
+                    ],
+                    "ReputationTrend": "UpGood",
+                    "Reputation": "+",
+                }
+            ],
         }
 
+        expected = MissionCompletedEvent.model_construct(
+            timestamp=datetime(2025, 2, 14, 18, 48, 59, tzinfo=timezone.utc),
+            event="MissionCompleted",
+            faction="Terran Colonial Forces",
+            name="Mission_AltruismCredits_Outbreak_name",
+            localised_name="Donate 300,000 Cr to Prevent a Medical Emergency",
+            mission_id=1003255884,
+            donation="300000",
+            donated=300000,
+            faction_effects=[
+                FactionEffectGroup.model_construct(
+                    faction="Terran Colonial Forces",
+                    effects=[
+                        FactionEffect.model_construct(
+                            effect="$MISSIONUTIL_Interaction_Summary_Outbreak_down;",
+                            effect_localised="With fewer reported cases of illness...",
+                            trend="DownGood",
+                        )
+                    ],
+                    influence=[
+                        {
+                            "SystemAddress": 9466779215257,
+                            "Trend": "UpGood",
+                            "Influence": "++",
+                        }
+                    ],
+                    reputation_trend="UpGood",
+                    reputation="+",
+                )
+            ],
+        )
+
         result = parser.parse(raw_event)
-        assert result is None
+        assert result == expected
+
+    def test_parse_mission_completed_commodity(self, parser):
+        raw_event = {
+            "timestamp": "2025-02-16T10:12:32Z",
+            "event": "MissionCompleted",
+            "Faction": "Terran Colonial Forces",
+            "Name": "Mission_Delivery_Confederacy_name",
+            "LocalisedName": "Support the confederacy by delivering 36 units of Fish",
+            "MissionID": 1003484014,
+            "Commodity": "$Fish_Name;",
+            "Commodity_Localised": "Fish",
+            "Count": 36,
+            "TargetFaction": "Starlance Alpha",
+            "DestinationSystem": "Aknandan",
+            "DestinationStation": "Gordon Terminal",
+            "Reward": 194465,
+            "FactionEffects": [
+                {
+                    "Faction": "Starlance Alpha",
+                    "Effects": [
+                        {
+                            "Effect": "$MISSIONUTIL_Interaction_Summary_EP_up;",
+                            "Effect_Localised": "The economic status of $#MinorFaction; has improved in the $#System; system.",
+                            "Trend": "UpGood",
+                        }
+                    ],
+                    "Influence": [
+                        {
+                            "SystemAddress": 2869978015193,
+                            "Trend": "UpGood",
+                            "Influence": "++",
+                        }
+                    ],
+                    "ReputationTrend": "UpGood",
+                    "Reputation": "+++++",
+                },
+                {
+                    "Faction": "Terran Colonial Forces",
+                    "Effects": [
+                        {
+                            "Effect": "$MISSIONUTIL_Interaction_Summary_EP_up;",
+                            "Effect_Localised": "The economic status of $#MinorFaction; has improved in the $#System; system.",
+                            "Trend": "UpGood",
+                        }
+                    ],
+                    "Influence": [
+                        {
+                            "SystemAddress": 9466779215257,
+                            "Trend": "UpGood",
+                            "Influence": "++",
+                        }
+                    ],
+                    "ReputationTrend": "UpGood",
+                    "Reputation": "+++++",
+                },
+            ],
+        }
+
+        expected = MissionCompletedEvent.model_construct(
+            timestamp=datetime(2025, 2, 16, 10, 12, 32, tzinfo=timezone.utc),
+            event="MissionCompleted",
+            faction="Terran Colonial Forces",
+            name="Mission_Delivery_Confederacy_name",
+            localised_name="Support the confederacy by delivering 36 units of Fish",
+            mission_id=1003484014,
+            commodity="$Fish_Name;",
+            commodity_localised="Fish",
+            count=36,
+            target_faction="Starlance Alpha",
+            destination_system="Aknandan",
+            destination_station="Gordon Terminal",
+            reward=194465,
+            faction_effects=[
+                FactionEffectGroup.model_construct(
+                    faction="Starlance Alpha",
+                    effects=[
+                        FactionEffect.model_construct(
+                            effect="$MISSIONUTIL_Interaction_Summary_EP_up;",
+                            effect_localised="The economic status of $#MinorFaction; has improved in the $#System; system.",
+                            trend="UpGood",
+                        )
+                    ],
+                    influence=[
+                        {
+                            "SystemAddress": 2869978015193,
+                            "Trend": "UpGood",
+                            "Influence": "++",
+                        }
+                    ],
+                    reputation_trend="UpGood",
+                    reputation="+++++",
+                ),
+                FactionEffectGroup.model_construct(
+                    faction="Terran Colonial Forces",
+                    effects=[
+                        FactionEffect.model_construct(
+                            effect="$MISSIONUTIL_Interaction_Summary_EP_up;",
+                            effect_localised="The economic status of $#MinorFaction; has improved in the $#System; system.",
+                            trend="UpGood",
+                        )
+                    ],
+                    influence=[
+                        {
+                            "SystemAddress": 9466779215257,
+                            "Trend": "UpGood",
+                            "Influence": "++",
+                        }
+                    ],
+                    reputation_trend="UpGood",
+                    reputation="+++++",
+                ),
+            ],
+        )
+
+        result = parser.parse(raw_event)
+        assert result == expected
 
     def test_parse_market(self, parser):
         raw_event = {
@@ -368,16 +354,16 @@ class TestJournalParser:
             "MarketID": 3228170496,
             "StationName": "Houssay Ring",
             "StationType": "Orbis",
-            "StarSystem": "Sudz"
+            "StarSystem": "Sudz",
         }
 
-        expected = MarketEvent(
+        expected = MarketEvent.model_construct(
             timestamp=datetime(2025, 2, 15, 23, 58, 41, tzinfo=timezone.utc),
             event="Market",
             market_id=3228170496,
             station_name="Houssay Ring",
             station_type="Orbis",
-            star_system="Sudz"
+            star_system="Sudz",
         )
 
         result = parser.parse(raw_event)
@@ -392,10 +378,10 @@ class TestJournalParser:
             "Type_Localised": "Performance Enhancers",
             "Count": 316,
             "BuyPrice": 5858,
-            "TotalCost": 1851128
+            "TotalCost": 1851128,
         }
 
-        expected = MarketBuyEvent(
+        expected = MarketBuyEvent.model_construct(
             timestamp=datetime(2025, 2, 15, 23, 10, 31, tzinfo=timezone.utc),
             event="MarketBuy",
             market_id=3228400128,
@@ -403,8 +389,46 @@ class TestJournalParser:
             type_localised="Performance Enhancers",
             count=316,
             buy_price=5858,
-            total_cost=1851128
+            total_cost=1851128,
         )
 
         result = parser.parse(raw_event)
-        assert result == expected 
+        assert result == expected
+
+    def test_parse_market_sell(self, parser):
+        raw_event = {
+            "timestamp": "2025-02-15T23:58:52Z",
+            "event": "MarketSell",
+            "MarketID": 3228170496,
+            "Type": "performanceenhancers",
+            "Type_Localised": "Performance Enhancers",
+            "Count": 316,
+            "SellPrice": 7188,
+            "TotalSale": 2271408,
+            "AvgPricePaid": 5858,
+        }
+
+        expected = MarketSellEvent.model_construct(
+            timestamp=datetime(2025, 2, 15, 23, 58, 52, tzinfo=timezone.utc),
+            event="MarketSell",
+            market_id=3228170496,
+            type="performanceenhancers",
+            type_localised="Performance Enhancers",
+            count=316,
+            sell_price=7188,
+            total_sale=2271408,
+            avg_price_paid=5858,
+        )
+
+        result = parser.parse(raw_event)
+        assert result == expected
+
+    def test_unknown_event_returns_none(self, parser):
+        raw_event = {
+            "timestamp": "2025-02-14T18:32:41Z",
+            "event": "UnknownEvent",
+            "SomeData": "value",
+        }
+
+        result = parser.parse(raw_event)
+        assert result is None

@@ -5,6 +5,7 @@ from collections import defaultdict
 
 dataclass = partial(dataclass, kw_only=True)
 
+
 @dataclass
 class Market:
     market_id: int
@@ -12,12 +13,14 @@ class Market:
     system_name: str
     is_carrier: bool
 
+
 @dataclass
 class MissionFactionEffect:
     faction: str
     effect_localised: str
     effect: str
     trend: str
+
 
 @dataclass
 class Mission:
@@ -28,6 +31,7 @@ class Mission:
     effects: list = field(default_factory=list)
     complete: bool = False
 
+
 @dataclass
 class CargoMission(Mission):
     good: str
@@ -35,9 +39,11 @@ class CargoMission(Mission):
     system: str
     station: str | None
 
+
 @dataclass
 class DonationMission(Mission):
     donated: int
+
 
 @dataclass
 class CargoSession:
@@ -45,4 +51,4 @@ class CargoSession:
     ended_at: datetime
     sold: dict[int, dict[str, int]]
     bought: dict[int, dict[str, int]]
-    missions: dict[int, CargoMission] 
+    missions: dict[int, CargoMission]

@@ -4,14 +4,14 @@ from .entities import (
     CargoMission,
     DonationMission,
     Mission,
-    MissionFactionEffect
+    MissionFactionEffect,
 )
 
 __all__ = [
-    'Market',
-    'CargoSession',
-    'CargoMission',
-    'DonationMission',
-    'Mission',
-    'MissionFactionEffect'
-] 
+    "Market",
+    "CargoSession",
+    "CargoMission",
+    "DonationMission",
+    "Mission",
+    "MissionFactionEffect",
+]

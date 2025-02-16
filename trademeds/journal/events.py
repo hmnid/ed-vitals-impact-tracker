@@ -1,95 +1,92 @@
-from dataclasses import dataclass
 from datetime import datetime
-from functools import partial
 from typing import List, Optional
+from pydantic import BaseModel, Field
 
-# Make all dataclasses keyword-only by default
-dataclass = partial(dataclass, kw_only=True)
 
-@dataclass
-class GameEvent:
-    timestamp: datetime
-    event: str
+class GameEvent(BaseModel):
+    timestamp: datetime = Field(alias="timestamp")
+    event: str = Field(alias="event")
 
-@dataclass
+
 class LoadGameEvent(GameEvent):
     """Represents a new game session start."""
-    pass  # Only inherits timestamp and event from GameEvent
 
-@dataclass
+    pass
+
+
+class FactionEffect(BaseModel):
+    effect: str = Field(alias="Effect")
+    effect_localised: str = Field(alias="Effect_Localised")
+    trend: str = Field(alias="Trend")
+
+
+class FactionEffectGroup(BaseModel):
+    faction: str = Field(alias="Faction")
+    effects: List[FactionEffect] = Field(alias="Effects")
+    influence: List[dict] = Field(alias="Influence")
+    reputation_trend: str = Field(alias="ReputationTrend")
+    reputation: str = Field(alias="Reputation")
+
+
 class MissionAcceptedEvent(GameEvent):
-    faction: str
-    name: str
-    localised_name: str
-    mission_id: int
-    expiry: datetime
-    influence: str
-    reputation: str
-    wing: Optional[bool] = None
+    faction: str = Field(alias="Faction")
+    name: str = Field(alias="Name")
+    localised_name: str = Field(alias="LocalisedName")
+    mission_id: int = Field(alias="MissionID")
+    expiry: datetime = Field(alias="Expiry")
+    influence: str = Field(alias="Influence")
+    reputation: str = Field(alias="Reputation")
+    wing: Optional[bool] = Field(None, alias="Wing")
     # Commodity mission fields
-    commodity: Optional[str] = None
-    commodity_localised: Optional[str] = None
-    count: Optional[int] = None
-    target_faction: Optional[str] = None
-    destination_system: Optional[str] = None
-    destination_station: Optional[str] = None
-    reward: Optional[int] = None
+    commodity: Optional[str] = Field(None, alias="Commodity")
+    commodity_localised: Optional[str] = Field(None, alias="Commodity_Localised")
+    count: Optional[int] = Field(None, alias="Count")
+    target_faction: Optional[str] = Field(None, alias="TargetFaction")
+    destination_system: Optional[str] = Field(None, alias="DestinationSystem")
+    destination_station: Optional[str] = Field(None, alias="DestinationStation")
+    reward: Optional[int] = Field(None, alias="Reward")
     # Donation mission fields
-    donation: Optional[str] = None
+    donation: Optional[str] = Field(None, alias="Donation")
 
-@dataclass
-class FactionEffect:
-    effect: str
-    effect_localised: str
-    trend: str
 
-@dataclass
-class FactionEffectGroup:
-    faction: str
-    effects: List[FactionEffect]
-    influence: List[dict]  # Could be further typed if needed
-    reputation_trend: str
-    reputation: str
-
-@dataclass
 class MissionCompletedEvent(GameEvent):
-    faction: str
-    name: str
-    localised_name: str
-    mission_id: int
-    faction_effects: List[FactionEffectGroup]
-    donation: Optional[str] = None
-    donated: Optional[int] = None
-    commodity: Optional[str] = None
-    commodity_localised: Optional[str] = None
-    count: Optional[int] = None
-    target_faction: Optional[str] = None
-    destination_system: Optional[str] = None
-    destination_station: Optional[str] = None
-    reward: Optional[int] = None
+    faction: str = Field(alias="Faction")
+    name: str = Field(alias="Name")
+    localised_name: str = Field(alias="LocalisedName")
+    mission_id: int = Field(alias="MissionID")
+    faction_effects: List[FactionEffectGroup] = Field(alias="FactionEffects")
+    donation: Optional[str] = Field(None, alias="Donation")
+    donated: Optional[int] = Field(None, alias="Donated")
+    commodity: Optional[str] = Field(None, alias="Commodity")
+    commodity_localised: Optional[str] = Field(None, alias="Commodity_Localised")
+    count: Optional[int] = Field(None, alias="Count")
+    target_faction: Optional[str] = Field(None, alias="TargetFaction")
+    destination_system: Optional[str] = Field(None, alias="DestinationSystem")
+    destination_station: Optional[str] = Field(None, alias="DestinationStation")
+    reward: Optional[int] = Field(None, alias="Reward")
 
-@dataclass
+
 class MarketEvent(GameEvent):
-    market_id: int
-    station_name: str
-    station_type: str
-    star_system: str
+    market_id: int = Field(alias="MarketID")
+    station_name: str = Field(alias="StationName")
+    station_type: str = Field(alias="StationType")
+    star_system: str = Field(alias="StarSystem")
 
-@dataclass
+
 class MarketBuyEvent(GameEvent):
-    market_id: int
-    type: str
-    type_localised: str
-    count: int
-    buy_price: int
-    total_cost: int
+    market_id: int = Field(alias="MarketID")
+    type: str = Field(alias="Type")
+    type_localised: str = Field(alias="Type_Localised")
+    count: int = Field(alias="Count")
+    buy_price: int = Field(alias="BuyPrice")
+    total_cost: int = Field(alias="TotalCost")
 
-@dataclass
+
 class MarketSellEvent(GameEvent):
-    market_id: int
-    type: str
-    type_localised: str
-    count: int
-    sell_price: int
-    total_sale: int
-    avg_price_paid: int 
+    market_id: int = Field(alias="MarketID")
+    type: str = Field(alias="Type")
+    type_localised: str = Field(alias="Type_Localised")
+    count: int = Field(alias="Count")
+    sell_price: int = Field(alias="SellPrice")
+    total_sale: int = Field(alias="TotalSale")
+    avg_price_paid: int = Field(alias="AvgPricePaid")

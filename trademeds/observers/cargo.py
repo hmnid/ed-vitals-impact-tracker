@@ -1,19 +1,20 @@
 from collections import defaultdict
 from datetime import datetime
 from ..models.entities import (
-    Market, 
-    CargoMission, 
-    DonationMission, 
-    Mission, 
-    MissionFactionEffect, 
-    CargoSession
+    Market,
+    CargoMission,
+    DonationMission,
+    Mission,
+    MissionFactionEffect,
+    CargoSession,
 )
 from ..journal.events import (
     MarketEvent,
     MarketSellEvent,
     MissionCompletedEvent,
-    LoadGameEvent
+    LoadGameEvent,
 )
+
 
 class CargoSessionBuilder:
     def __init__(self):
@@ -23,10 +24,14 @@ class CargoSessionBuilder:
         self.sold = defaultdict(lambda: defaultdict(int))
         self.bought = defaultdict(lambda: defaultdict(int))
         self.missions = {}
-        self.last_event_at = None  # This is chronologically the last event in the session
+        self.last_event_at = (
+            None  # This is chronologically the last event in the session
+        )
 
     def observe_event_time(self, timestamp: datetime) -> None:
-        if self.last_event_at is None:  # We see it first when traversing, but it's the last event chronologically
+        if (
+            self.last_event_at is None
+        ):  # We see it first when traversing, but it's the last event chronologically
             self.last_event_at = timestamp
 
     def sell(self, good: str, count: int, market_id: int = -1) -> None:
@@ -49,6 +54,7 @@ class CargoSessionBuilder:
         self._init_vars()
         return instance
 
+
 class VitalsCargoSessionCollector:
     def __init__(self, merges: int = 0):
         self.markets: dict[int, Market] = {}
@@ -65,18 +71,18 @@ class VitalsCargoSessionCollector:
                 market_id=event.market_id,
                 station_name=event.station_name,
                 system_name=event.star_system,
-                is_carrier=event.station_type == 'FleetCarrier'
+                is_carrier=event.station_type == "FleetCarrier",
             )
         elif isinstance(event, LoadGameEvent):
             if self.merges_remain:
                 self.merges_remain -= 1
             else:
-                self.sessions.append(self.session_builder.build(started_at=event.timestamp))
+                self.sessions.append(
+                    self.session_builder.build(started_at=event.timestamp)
+                )
         elif isinstance(event, MarketSellEvent):
             self.session_builder.sell(
-                market_id=event.market_id,
-                good=event.type,
-                count=event.count
+                market_id=event.market_id, good=event.type, count=event.count
             )
         elif isinstance(event, MissionCompletedEvent):
             mission = self._create_mission(event)
@@ -115,6 +121,6 @@ class VitalsCargoSessionCollector:
                 effect_localised=effect.effect_localised,
                 trend=effect.trend,
             )
-            for feffect in faction_effects 
+            for feffect in faction_effects
             for effect in feffect.effects
-        ] 
+        ]

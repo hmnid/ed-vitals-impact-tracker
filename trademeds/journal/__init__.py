@@ -7,17 +7,17 @@ from .events import (
     MarketBuyEvent,
     MarketSellEvent,
     FactionEffect,
-    FactionEffectGroup
+    FactionEffectGroup,
 )
 
 __all__ = [
-    'JournalEventTraverser',
-    'LoadGameEvent',
-    'MissionAcceptedEvent',
-    'MissionCompletedEvent',
-    'MarketEvent',
-    'MarketBuyEvent',
-    'MarketSellEvent',
-    'FactionEffect',
-    'FactionEffectGroup'
-] 
+    "JournalEventTraverser",
+    "LoadGameEvent",
+    "MissionAcceptedEvent",
+    "MissionCompletedEvent",
+    "MarketEvent",
+    "MarketBuyEvent",
+    "MarketSellEvent",
+    "FactionEffect",
+    "FactionEffectGroup",
+]
