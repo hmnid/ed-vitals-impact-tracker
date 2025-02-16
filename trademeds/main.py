@@ -9,7 +9,7 @@ journal_path = os.path.join(
 )
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Обработка сессий.")
     parser.add_argument(
         "--sessions", type=int, default=5, help="Количество сессий для просмотра"

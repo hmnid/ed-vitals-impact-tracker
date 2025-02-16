@@ -1,20 +1,19 @@
 import os
 import json
-from typing import Optional
 from .parser import JournalEventParser
-from .events import GameEvent
+from .observer import JournalObserver
 
 
 class JournalEventTraverser:
-    def __init__(self, journal_path: str):
+    def __init__(self, journal_path: str) -> None:
         self.journal_path = journal_path
-        self.observers = []
+        self.observers: list[JournalObserver] = []
         self.parser = JournalEventParser()
 
-    def add_observer(self, observer):
+    def add_observer(self, observer: JournalObserver) -> None:
         self.observers.append(observer)
 
-    def traverse(self, max_sessions: int = 5):
+    def traverse(self, max_sessions: int = 5) -> None:
         sessions_found = 0
 
         for dr in sorted(os.listdir(self.journal_path), reverse=True):

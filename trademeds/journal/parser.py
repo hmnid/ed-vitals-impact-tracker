@@ -11,7 +11,7 @@ from .events import (
 
 
 class JournalEventParser:
-    def __init__(self):
+    def __init__(self) -> None:
         self._event_parsers: Dict[str, Type[GameEvent]] = {
             "LoadGame": LoadGameEvent,
             "MissionAccepted": MissionAcceptedEvent,

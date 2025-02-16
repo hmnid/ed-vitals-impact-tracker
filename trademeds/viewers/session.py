@@ -1,25 +1,26 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
-from ..models.entities import Market, CargoSession, CargoMission, DonationMission
+from typing import Type
+from ..models.entities import Market, CargoSession, CargoMission, DonationMission, Mission
 
 
 class SessionView:
-    def __init__(self, markets: dict[int, Market]):
+    def __init__(self, markets: dict[int, Market]) -> None:
         self.markets = markets
 
-    def display_sessions(self, sessions: list[CargoSession]):
+    def display_sessions(self, sessions: list[CargoSession]) -> None:
         for session in sessions:
             self.display_session(session)
             print("")
 
-    def display_session(self, session: CargoSession):
+    def display_session(self, session: CargoSession) -> None:
         print(
             f"VITAL Session {session.started_at.isoformat()} - {session.ended_at.isoformat()}"
         )
         self._display_sales(session)
         self._display_missions(session)
 
-    def _display_sales(self, session: CargoSession):
+    def _display_sales(self, session: CargoSession) -> None:
         if not session.sold:
             return
 
@@ -40,13 +41,13 @@ class SessionView:
                 print(f"        {good}: {count}")
             print(" " * 8 + f"total: {total}")
 
-    def _display_missions(self, session: CargoSession):
+    def _display_missions(self, session: CargoSession) -> None:
         if not session.missions:
             return
         print(f"    Missions:")
         self._missions_repr(session.missions)
 
-    def _localise_mission_faction_effect(self, t):
+    def _localise_mission_faction_effect(self, t: str) -> str:
         if t == "$MISSIONUTIL_Interaction_Summary_Outbreak_down;":
             return "OUTBREAK_DOWN"
         if t == "$MISSIONUTIL_Interaction_Summary_EP_up;":
@@ -55,7 +56,7 @@ class SessionView:
             return "SECURITY_UP"
         return t
 
-    def _missions_repr(self, missions):
+    def _missions_repr(self, missions: dict[int, Mission]) -> None:
         @dataclass
         class MissionSummary:
             count: int = 0
@@ -72,11 +73,11 @@ class SessionView:
         class DonationMissionSummary(MissionSummary):
             donated: int = 0
 
-        type_to_summary = {
+        type_to_summary: dict[Type[Mission], Type[MissionSummary]] = {
             CargoMission: CargoMissionSummary,
             DonationMission: DonationMissionSummary,
         }
-        aggr = defaultdict(dict)
+        aggr: dict[str, dict[str, MissionSummary]] = defaultdict(dict)
 
         for mission in missions.values():
             if mission.technical_name not in aggr[mission.faction]:
@@ -87,8 +88,10 @@ class SessionView:
             mtype_aggr = aggr[mission.faction][mission.technical_name]
             mtype_aggr.count += 1
             if isinstance(mission, CargoMission):
+                assert isinstance(mtype_aggr, CargoMissionSummary)
                 mtype_aggr.goods[mission.good] += mission.count
             elif isinstance(mission, DonationMission):
+                assert isinstance(mtype_aggr, DonationMissionSummary)
                 mtype_aggr.donated += mission.donated
             else:
                 raise ValueError("Unknown mission type")

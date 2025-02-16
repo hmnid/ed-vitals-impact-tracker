@@ -1,12 +1,10 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from functools import partial
 from collections import defaultdict
+from typing import List, Dict, Optional
 
-dataclass = partial(dataclass, kw_only=True)
 
-
-@dataclass
+@dataclass(kw_only=True)
 class Market:
     market_id: int
     station_name: str
@@ -14,7 +12,7 @@ class Market:
     is_carrier: bool
 
 
-@dataclass
+@dataclass(kw_only=True)
 class MissionFactionEffect:
     faction: str
     effect_localised: str
@@ -22,33 +20,37 @@ class MissionFactionEffect:
     trend: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Mission:
     mission_id: int
     title: str
     technical_name: str
     faction: str
-    effects: list = field(default_factory=list)
     complete: bool = False
+    effects: List[MissionFactionEffect] = field(default_factory=list)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class CargoMission(Mission):
     good: str
     count: int
     system: str
-    station: str | None
+    station: Optional[str] = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class DonationMission(Mission):
     donated: int
 
 
-@dataclass
+@dataclass(kw_only=True)
 class CargoSession:
     started_at: datetime
     ended_at: datetime
-    sold: dict[int, dict[str, int]]
-    bought: dict[int, dict[str, int]]
-    missions: dict[int, CargoMission]
+    missions: Dict[int, Mission] = field(default_factory=dict)
+    sold: Dict[int, Dict[str, int]] = field(
+        default_factory=lambda: defaultdict(lambda: defaultdict(int))
+    )
+    bought: Dict[int, Dict[str, int]] = field(
+        default_factory=lambda: defaultdict(lambda: defaultdict(int))
+    )
