@@ -1,34 +1,41 @@
 from dataclasses import dataclass
 from datetime import datetime
+from functools import partial
 from typing import List, Optional
 
-@dataclass
-class LoadGameEvent:
-    timestamp: datetime
-    commander: str
-    ship: str
-    ship_localised: str
-    ship_id: int
-    ship_name: str
-    ship_ident: str
-    credits: int
-    game_mode: str
+# Make all dataclasses keyword-only by default
+dataclass = partial(dataclass, kw_only=True)
 
 @dataclass
-class MissionAcceptedEvent:
+class GameEvent:
     timestamp: datetime
+    event: str
+
+@dataclass
+class LoadGameEvent(GameEvent):
+    """Represents a new game session start."""
+    pass  # Only inherits timestamp and event from GameEvent
+
+@dataclass
+class MissionAcceptedEvent(GameEvent):
     faction: str
     name: str
     localised_name: str
-    commodity: Optional[str]
-    commodity_localised: Optional[str]
-    count: Optional[int]
-    destination_system: str
-    destination_station: str
-    expiry: datetime
     mission_id: int
+    expiry: datetime
     influence: str
     reputation: str
+    wing: Optional[bool] = None
+    # Commodity mission fields
+    commodity: Optional[str] = None
+    commodity_localised: Optional[str] = None
+    count: Optional[int] = None
+    target_faction: Optional[str] = None
+    destination_system: Optional[str] = None
+    destination_station: Optional[str] = None
+    reward: Optional[int] = None
+    # Donation mission fields
+    donation: Optional[str] = None
 
 @dataclass
 class FactionEffect:
@@ -45,27 +52,31 @@ class FactionEffectGroup:
     reputation: str
 
 @dataclass
-class MissionCompletedEvent:
-    timestamp: datetime
+class MissionCompletedEvent(GameEvent):
     faction: str
     name: str
     localised_name: str
     mission_id: int
-    donation: Optional[str]
-    donated: Optional[int]
     faction_effects: List[FactionEffectGroup]
+    donation: Optional[str] = None
+    donated: Optional[int] = None
+    commodity: Optional[str] = None
+    commodity_localised: Optional[str] = None
+    count: Optional[int] = None
+    target_faction: Optional[str] = None
+    destination_system: Optional[str] = None
+    destination_station: Optional[str] = None
+    reward: Optional[int] = None
 
 @dataclass
-class MarketEvent:
-    timestamp: datetime
+class MarketEvent(GameEvent):
     market_id: int
     station_name: str
     station_type: str
     star_system: str
 
 @dataclass
-class MarketBuyEvent:
-    timestamp: datetime
+class MarketBuyEvent(GameEvent):
     market_id: int
     type: str
     type_localised: str
@@ -74,8 +85,7 @@ class MarketBuyEvent:
     total_cost: int
 
 @dataclass
-class MarketSellEvent:
-    timestamp: datetime
+class MarketSellEvent(GameEvent):
     market_id: int
     type: str
     type_localised: str

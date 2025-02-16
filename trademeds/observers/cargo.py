@@ -84,7 +84,7 @@ class VitalsCargoSessionCollector:
                 self.session_builder.complete_mission(mission)
 
     def _create_mission(self, event: MissionCompletedEvent) -> Mission | None:
-        if hasattr(event, 'commodity'):
+        if event.commodity is not None:  # Check if it's a commodity mission
             return CargoMission(
                 mission_id=event.mission_id,
                 title=event.localised_name,
@@ -96,7 +96,7 @@ class VitalsCargoSessionCollector:
                 good=event.commodity_localised,
                 count=event.count,
             )
-        if hasattr(event, 'donated'):
+        if event.donated is not None:  # Check if it's a donation mission
             return DonationMission(
                 mission_id=event.mission_id,
                 title=event.localised_name,
