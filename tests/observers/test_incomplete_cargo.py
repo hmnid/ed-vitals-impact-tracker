@@ -27,34 +27,28 @@ def test_tracks_new_cargo_mission():
 def test_removes_completed_mission():
     tracker = IncompleteCargoTracker()
 
-    tracker.handle_event(make_mission_accepted(123))
-    assert len(tracker.missions) == 1
-
     tracker.handle_event(make_mission_completed(123))
+    tracker.handle_event(make_mission_accepted(123))
     assert len(tracker.missions) == 0
 
 
 def test_removes_abandoned_mission():
     tracker = IncompleteCargoTracker()
 
-    tracker.handle_event(make_mission_accepted(123))
-    assert len(tracker.missions) == 1
-
     tracker.handle_event(make_mission_abandoned(123))
+    tracker.handle_event(make_mission_accepted(123))
     assert len(tracker.missions) == 0
 
 
 def test_updates_remaining_count():
     tracker = IncompleteCargoTracker()
 
+    tracker.handle_event(make_cargo_depot(
+        mission_id=123,
+        delivered_count=40,
+        total_count=100,
+    ))
     tracker.handle_event(make_mission_accepted(123))
-    tracker.handle_event(
-        make_cargo_depot(
-            mission_id=123,
-            delivered_count=40,
-            total_count=100,
-        )
-    )
 
     assert tracker.missions[123].count == 60  # 100 - 40 = 60 remaining
 
@@ -62,48 +56,42 @@ def test_updates_remaining_count():
 def test_removes_fully_delivered_mission():
     tracker = IncompleteCargoTracker()
 
+    tracker.handle_event(make_cargo_depot(
+        mission_id=123,
+        delivered_count=100,
+        total_count=100,
+    ))
     tracker.handle_event(make_mission_accepted(123))
-    assert len(tracker.missions) == 1
-
-    tracker.handle_event(
-        make_cargo_depot(
-            mission_id=123,
-            delivered_count=100,
-            total_count=100,
-        )
-    )
     assert len(tracker.missions) == 0
 
 
 def test_ignores_collect_updates():
     tracker = IncompleteCargoTracker()
 
+    tracker.handle_event(make_cargo_depot(
+        mission_id=123,
+        delivered_count=0,
+        total_count=50,
+        update_type=CargoDepotUpdateType.COLLECT,
+    ))
     tracker.handle_event(make_mission_accepted(123, count=50))
-    tracker.handle_event(
-        make_cargo_depot(
-            mission_id=123,
-            delivered_count=0,
-            total_count=50,
-            update_type=CargoDepotUpdateType.COLLECT,
-        )
-    )
 
     assert tracker.missions[123].count == 50  # Count should remain unchanged
 
 
 def test_respects_session_depth():
     tracker = IncompleteCargoTracker(depth=2)
-
+    
     # Session 3 (most recent) - should be tracked
     tracker.handle_event(make_mission_accepted(125, good="Platinum", count=75))
     tracker.handle_event(make_load_game())
     assert len(tracker.missions) == 1
-
+    
     # Session 2 - should be tracked
     tracker.handle_event(make_mission_accepted(124, good="Silver", count=50))
     tracker.handle_event(make_load_game())
     assert len(tracker.missions) == 2
-
+    
     # Session 1 (oldest) - should not be tracked
     tracker.handle_event(make_mission_accepted(123))
     tracker.handle_event(make_load_game())
