@@ -37,8 +37,12 @@ class IncompleteCargoTracker(JournalObserver):
 
         if isinstance(event, MissionAcceptedEvent):
             if event.commodity is not None:
-                assert event.destination_system is not None, "Cargo mission must have a destination"
-                assert event.commodity_localised is not None, "Cargo mission must have a commodity name"
+                assert (
+                    event.destination_system is not None
+                ), "Cargo mission must have a destination"
+                assert (
+                    event.commodity_localised is not None
+                ), "Cargo mission must have a commodity name"
                 assert event.count is not None, "Cargo mission must have a count"
 
                 self.missions[event.mission_id] = IncompleteMission(

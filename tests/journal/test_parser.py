@@ -432,7 +432,7 @@ class TestJournalParser:
             "event": "MissionAbandoned",
             "Name": "Mission_Collect_Outbreak_name",
             "LocalisedName": "Outbreak aid needed 45 units of Onionhead Gamma Strain",
-            "MissionID": 1003432117
+            "MissionID": 1003432117,
         }
 
         expected = MissionAbandonedEvent.model_construct(
@@ -440,7 +440,7 @@ class TestJournalParser:
             event="MissionAbandoned",
             mission_id=1003432117,
             name="Mission_Collect_Outbreak_name",
-            localised_name="Outbreak aid needed 45 units of Onionhead Gamma Strain"
+            localised_name="Outbreak aid needed 45 units of Onionhead Gamma Strain",
         )
 
         result = parser.parse(raw_event)
@@ -470,7 +470,7 @@ class TestJournalParser:
             "ItemsCollected": 0,
             "ItemsDelivered": 875,
             "TotalItemsToDeliver": 1170,
-            "Progress": 0.000000
+            "Progress": 0.000000,
         }
 
         expected = CargoDepotEvent.model_construct(
@@ -486,7 +486,7 @@ class TestJournalParser:
             items_collected=0,
             items_delivered=875,
             total_items_to_deliver=1170,
-            progress=0.0
+            progress=0.0,
         )
 
         result = parser.parse(raw_event)
@@ -505,7 +505,7 @@ class TestJournalParser:
             "ItemsCollected": 36,
             "ItemsDelivered": 0,
             "TotalItemsToDeliver": 36,
-            "Progress": 1.000000
+            "Progress": 1.000000,
         }
 
         expected = CargoDepotEvent.model_construct(
@@ -521,7 +521,7 @@ class TestJournalParser:
             items_collected=36,
             items_delivered=0,
             total_items_to_deliver=36,
-            progress=1.0
+            progress=1.0,
         )
 
         result = parser.parse(raw_event)

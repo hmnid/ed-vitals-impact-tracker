@@ -96,6 +96,7 @@ class MarketSellEvent(GameEvent):
 
 class MissionAbandonedEvent(GameEvent):
     """Represents a mission being abandoned by the player."""
+
     mission_id: int = Field(alias="MissionID")
     name: str = Field(alias="Name")
     localised_name: str = Field(alias="LocalisedName")
@@ -108,6 +109,7 @@ class CargoDepotUpdateType(Enum):
 
 class CargoDepotEvent(GameEvent):
     """Represents a cargo delivery or collection for a mission."""
+
     mission_id: int = Field(alias="MissionID")
     update_type: CargoDepotUpdateType = Field(alias="UpdateType")
     cargo_type: str = Field(alias="CargoType")
