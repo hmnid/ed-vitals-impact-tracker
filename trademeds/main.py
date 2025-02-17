@@ -66,8 +66,4 @@ def show_incomplete_cargo(depth: int) -> None:
 
     # TODO: Add proper viewer for incomplete cargo
     for mission in collector.missions.values():
-        print(f"{mission.mission_id} | {mission.good}: {mission.count} remaining (to {mission.system} for {mission.faction})")
-
-
-if __name__ == "__main__":
-    main()
+        print(f"{mission.good}: {mission.count} remaining (to {mission.system} for {mission.faction})")
