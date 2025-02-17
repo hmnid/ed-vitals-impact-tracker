@@ -10,6 +10,9 @@ from trademeds.journal.events import (
     FactionEffect,
     FactionEffectGroup,
     MissionAcceptedEvent,
+    MissionAbandonedEvent,
+    CargoDepotEvent,
+    CargoDepotUpdateType,
 )
 
 
@@ -423,6 +426,26 @@ class TestJournalParser:
         result = parser.parse(raw_event)
         assert result == expected
 
+    def test_parse_mission_abandoned(self, parser):
+        raw_event = {
+            "timestamp": "2025-02-16T09:41:07Z",
+            "event": "MissionAbandoned",
+            "Name": "Mission_Collect_Outbreak_name",
+            "LocalisedName": "Outbreak aid needed 45 units of Onionhead Gamma Strain",
+            "MissionID": 1003432117
+        }
+
+        expected = MissionAbandonedEvent.model_construct(
+            timestamp=datetime(2025, 2, 16, 9, 41, 7, tzinfo=timezone.utc),
+            event="MissionAbandoned",
+            mission_id=1003432117,
+            name="Mission_Collect_Outbreak_name",
+            localised_name="Outbreak aid needed 45 units of Onionhead Gamma Strain"
+        )
+
+        result = parser.parse(raw_event)
+        assert result == expected
+
     def test_unknown_event_returns_none(self, parser):
         raw_event = {
             "timestamp": "2025-02-14T18:32:41Z",
@@ -432,3 +455,74 @@ class TestJournalParser:
 
         result = parser.parse(raw_event)
         assert result is None
+
+    def test_parse_cargo_depot_deliver(self, parser):
+        raw_event = {
+            "timestamp": "2025-02-14T21:01:48Z",
+            "event": "CargoDepot",
+            "MissionID": 1003268244,
+            "UpdateType": "Deliver",
+            "CargoType": "ProgenitorCells",
+            "CargoType_Localised": "Progenitor Cells",
+            "Count": 740,
+            "StartMarketID": 0,
+            "EndMarketID": 3228170496,
+            "ItemsCollected": 0,
+            "ItemsDelivered": 875,
+            "TotalItemsToDeliver": 1170,
+            "Progress": 0.000000
+        }
+
+        expected = CargoDepotEvent.model_construct(
+            timestamp=datetime(2025, 2, 14, 21, 1, 48, tzinfo=timezone.utc),
+            event="CargoDepot",
+            mission_id=1003268244,
+            update_type=CargoDepotUpdateType.DELIVER,
+            cargo_type="ProgenitorCells",
+            cargo_type_localised="Progenitor Cells",
+            count=740,
+            start_market_id=0,
+            end_market_id=3228170496,
+            items_collected=0,
+            items_delivered=875,
+            total_items_to_deliver=1170,
+            progress=0.0
+        )
+
+        result = parser.parse(raw_event)
+        assert result == expected
+
+    def test_parse_cargo_depot_collect(self, parser):
+        raw_event = {
+            "timestamp": "2025-02-16T09:42:52Z",
+            "event": "CargoDepot",
+            "MissionID": 1003484014,
+            "UpdateType": "Collect",
+            "CargoType": "Fish",
+            "Count": 36,
+            "StartMarketID": 3228170496,
+            "EndMarketID": 3544958720,
+            "ItemsCollected": 36,
+            "ItemsDelivered": 0,
+            "TotalItemsToDeliver": 36,
+            "Progress": 1.000000
+        }
+
+        expected = CargoDepotEvent.model_construct(
+            timestamp=datetime(2025, 2, 16, 9, 42, 52, tzinfo=timezone.utc),
+            event="CargoDepot",
+            mission_id=1003484014,
+            update_type=CargoDepotUpdateType.COLLECT,
+            cargo_type="Fish",
+            cargo_type_localised=None,
+            count=36,
+            start_market_id=3228170496,
+            end_market_id=3544958720,
+            items_collected=36,
+            items_delivered=0,
+            total_items_to_deliver=36,
+            progress=1.0
+        )
+
+        result = parser.parse(raw_event)
+        assert result == expected

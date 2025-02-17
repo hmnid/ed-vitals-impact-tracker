@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
+from dataclasses import dataclass, field
+from enum import Enum
 
 
 class GameEvent(BaseModel):
@@ -90,3 +92,30 @@ class MarketSellEvent(GameEvent):
     sell_price: int = Field(alias="SellPrice")
     total_sale: int = Field(alias="TotalSale")
     avg_price_paid: int = Field(alias="AvgPricePaid")
+
+
+class MissionAbandonedEvent(GameEvent):
+    """Represents a mission being abandoned by the player."""
+    mission_id: int = Field(alias="MissionID")
+    name: str = Field(alias="Name")
+    localised_name: str = Field(alias="LocalisedName")
+
+
+class CargoDepotUpdateType(Enum):
+    DELIVER = "Deliver"
+    COLLECT = "Collect"
+
+
+class CargoDepotEvent(GameEvent):
+    """Represents a cargo delivery or collection for a mission."""
+    mission_id: int = Field(alias="MissionID")
+    update_type: CargoDepotUpdateType = Field(alias="UpdateType")
+    cargo_type: str = Field(alias="CargoType")
+    cargo_type_localised: str | None = Field(alias="CargoType_Localised", default=None)
+    count: int = Field(alias="Count")
+    start_market_id: int = Field(alias="StartMarketID")
+    end_market_id: int = Field(alias="EndMarketID")
+    items_collected: int = Field(alias="ItemsCollected")
+    items_delivered: int = Field(alias="ItemsDelivered")
+    total_items_to_deliver: int = Field(alias="TotalItemsToDeliver")
+    progress: float = Field(alias="Progress")

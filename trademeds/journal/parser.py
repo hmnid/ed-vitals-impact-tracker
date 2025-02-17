@@ -4,9 +4,11 @@ from .events import (
     LoadGameEvent,
     MissionAcceptedEvent,
     MissionCompletedEvent,
+    MissionAbandonedEvent,
     MarketEvent,
     MarketBuyEvent,
     MarketSellEvent,
+    CargoDepotEvent,
 )
 
 
@@ -16,9 +18,11 @@ class JournalEventParser:
             "LoadGame": LoadGameEvent,
             "MissionAccepted": MissionAcceptedEvent,
             "MissionCompleted": MissionCompletedEvent,
+            "MissionAbandoned": MissionAbandonedEvent,
             "Market": MarketEvent,
             "MarketBuy": MarketBuyEvent,
             "MarketSell": MarketSellEvent,
+            "CargoDepot": CargoDepotEvent,
         }
 
     def parse(self, raw_event: dict) -> Optional[GameEvent]:
