@@ -8,6 +8,7 @@ from ..models.entities import (
     Mission,
     MissionFactionEffect,
     CargoSession,
+    GenericMission,
 )
 from ..journal.events import (
     GameEvent,
@@ -119,7 +120,16 @@ class VitalsCargoSessionCollector:
                 effects=self._create_effects(event.faction_effects),
                 donated=event.donated,
             )
-        raise ValueError("Unknown mission type: neither commodity nor donation mission")
+        # Any other mission type
+        return GenericMission(
+            mission_id=event.mission_id,
+            title=event.localised_name,
+            technical_name=event.name,
+            faction=event.faction,
+            system=event.destination_system,
+            station=event.destination_station,
+            effects=self._create_effects(event.faction_effects),
+        )
 
     def _create_effects(
         self, faction_effects: list[FactionEffectGroup]

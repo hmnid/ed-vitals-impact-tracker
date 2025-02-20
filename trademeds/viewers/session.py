@@ -7,6 +7,7 @@ from ..models.entities import (
     CargoMission,
     DonationMission,
     Mission,
+    GenericMission,
 )
 
 
@@ -79,9 +80,14 @@ class SessionView:
         class DonationMissionSummary(MissionSummary):
             donated: int = 0
 
+        @dataclass
+        class GenericMissionSummary(MissionSummary):
+            pass
+
         type_to_summary: dict[Type[Mission], Type[MissionSummary]] = {
             CargoMission: CargoMissionSummary,
             DonationMission: DonationMissionSummary,
+            GenericMission: GenericMissionSummary,
         }
         aggr: dict[str, dict[str, MissionSummary]] = defaultdict(dict)
 
@@ -99,6 +105,8 @@ class SessionView:
             elif isinstance(mission, DonationMission):
                 assert isinstance(mtype_aggr, DonationMissionSummary)
                 mtype_aggr.donated += mission.donated
+            elif isinstance(mission, GenericMission):
+                pass
             else:
                 raise ValueError("Unknown mission type")
 

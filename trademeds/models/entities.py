@@ -54,3 +54,10 @@ class CargoSession:
     bought: Dict[int, Dict[str, int]] = field(
         default_factory=lambda: defaultdict(lambda: defaultdict(int))
     )
+
+
+@dataclass(kw_only=True)
+class GenericMission(Mission):
+    """A generic mission that's neither cargo delivery nor donation."""
+    system: str | None = None
+    station: str | None = None
