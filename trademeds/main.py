@@ -30,7 +30,9 @@ def main() -> None:
     )
 
     # Incomplete cargo command
-    pending_cargo_parser = subparsers.add_parser("pending-cargo", help="Show incomplete cargo missions")
+    pending_cargo_parser = subparsers.add_parser(
+        "pending-cargo", help="Show incomplete cargo missions"
+    )
     pending_cargo_parser.add_argument(
         "--depth",
         type=int,
@@ -64,6 +66,10 @@ def show_incomplete_cargo(depth: int) -> None:
 
     traverser.traverse(max_sessions=depth)
 
-    # TODO: Add proper viewer for incomplete cargo
+    total_cargo = sum(mission.count for mission in collector.missions.values())
+
+    print(f"\nPending cargo missions (total: {total_cargo:,} units):\n")
     for mission in collector.missions.values():
-        print(f"{mission.good}: {mission.count} remaining (to {mission.system} for {mission.faction})")
+        print(
+            f"{mission.good}: {mission.count:,} remaining (to {mission.system} for {mission.faction})"
+        )

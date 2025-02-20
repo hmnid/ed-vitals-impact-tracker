@@ -26,7 +26,9 @@ class IncompleteCargoTracker(JournalObserver):
     def __init__(self, depth: int = 10) -> None:
         self.depth = depth
         self.missions: Dict[int, IncompleteMission] = {}
-        self.finished_missions: set[int] = set()  # Includes completed, abandoned and fully delivered
+        self.finished_missions: set[int] = (
+            set()
+        )  # Includes completed, abandoned and fully delivered
         self.pending_deliveries: Dict[int, int] = {}  # mission_id -> remaining count
         self.sessions_seen = 0
 
@@ -39,13 +41,19 @@ class IncompleteCargoTracker(JournalObserver):
 
         if isinstance(event, MissionAcceptedEvent):
             if event.commodity is not None:
-                assert event.destination_system is not None, "Cargo mission must have a destination"
-                assert event.commodity_localised is not None, "Cargo mission must have a commodity name"
+                assert (
+                    event.destination_system is not None
+                ), "Cargo mission must have a destination"
+                assert (
+                    event.commodity_localised is not None
+                ), "Cargo mission must have a commodity name"
                 assert event.count is not None, "Cargo mission must have a count"
 
                 # Only add mission if we haven't seen it finished
                 if event.mission_id not in self.finished_missions:
-                    remaining = self.pending_deliveries.get(event.mission_id, event.count)
+                    remaining = self.pending_deliveries.get(
+                        event.mission_id, event.count
+                    )
                     if remaining > 0:
                         self.missions[event.mission_id] = IncompleteMission(
                             mission_id=event.mission_id,
@@ -64,7 +72,7 @@ class IncompleteCargoTracker(JournalObserver):
                     self.pending_deliveries[event.mission_id] = remaining
                 else:
                     self.finished_missions.add(event.mission_id)
-                
+
                 mission = self.missions.get(event.mission_id)
                 if mission:
                     if remaining > 0:
