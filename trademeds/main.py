@@ -4,6 +4,7 @@ from .journal import JournalEventTraverser
 from .observers.cargo import VitalsCargoSessionCollector
 from .observers.incomplete_cargo import IncompleteCargoTracker
 from .viewers.session import SessionView
+from .viewers.pending_cargo import PendingCargoView
 
 journal_path = os.path.join(
     os.environ["USERPROFILE"], "Saved Games\\Frontier Developments\\Elite Dangerous\\"
@@ -30,9 +31,7 @@ def main() -> None:
     )
 
     # Incomplete cargo command
-    pending_cargo_parser = subparsers.add_parser(
-        "pending-cargo", help="Show incomplete cargo missions"
-    )
+    pending_cargo_parser = subparsers.add_parser("pending-cargo", help="Show incomplete cargo missions")
     pending_cargo_parser.add_argument(
         "--depth",
         type=int,
@@ -66,10 +65,5 @@ def show_incomplete_cargo(depth: int) -> None:
 
     traverser.traverse(max_sessions=depth)
 
-    total_cargo = sum(mission.count for mission in collector.missions.values())
-
-    print(f"\nPending cargo missions (total: {total_cargo:,} units):\n")
-    for mission in collector.missions.values():
-        print(
-            f"{mission.good}: {mission.count:,} remaining (to {mission.system} for {mission.faction})"
-        )
+    view = PendingCargoView(collector.missions)
+    view.display()
