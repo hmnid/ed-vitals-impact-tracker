@@ -1,11 +1,13 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from dataclasses import dataclass, field
 from enum import Enum
 
 
 class GameEvent(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     timestamp: datetime = Field(alias="timestamp")
     event: str = Field(alias="event")
 
