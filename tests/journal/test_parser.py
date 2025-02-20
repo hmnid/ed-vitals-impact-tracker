@@ -526,3 +526,40 @@ class TestJournalParser:
 
         result = parser.parse(raw_event)
         assert result == expected
+
+    def test_parses_market_buy_without_localised_type(self, parser):
+        """Some commodities like tea or coffee don't have localised names in the journal."""
+        raw_event = {
+            "timestamp": "2024-01-15T12:34:56Z",
+            "event": "MarketBuy",
+            "MarketID": 123,
+            "Type": "tea",
+            "Count": 10,
+            "BuyPrice": 100,
+            "TotalCost": 1000,
+        }
+
+        event = parser.parse(raw_event)
+
+        assert isinstance(event, MarketBuyEvent)
+        assert event.type == "tea"
+        assert event.type_localised is None
+
+    def test_parses_market_sell_without_localised_type(self, parser):
+        """Some commodities like tea or coffee don't have localised names in the journal."""
+        raw_event = {
+            "timestamp": "2024-01-15T12:34:56Z",
+            "event": "MarketSell",
+            "MarketID": 123,
+            "Type": "coffee",
+            "Count": 10,
+            "SellPrice": 200,
+            "TotalSale": 2000,
+            "AvgPricePaid": 100,
+        }
+
+        event = parser.parse(raw_event)
+
+        assert isinstance(event, MarketSellEvent)
+        assert event.type == "coffee"
+        assert event.type_localised is None

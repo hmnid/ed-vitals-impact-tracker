@@ -1,9 +1,11 @@
 from collections import defaultdict
-from typing import DefaultDict, Dict, NamedTuple
+from dataclasses import dataclass
+from typing import DefaultDict, Dict
 from ..observers.incomplete_cargo import IncompleteMission
 
 
-class CargoGroup(NamedTuple):
+@dataclass(frozen=True)
+class CargoGroup:
     good: str
     count: int
     faction: str
@@ -15,7 +17,7 @@ class PendingCargoView:
 
     def display(self) -> None:
         total_cargo = sum(mission.count for mission in self.missions.values())
-        
+
         # Group by system and good
         by_system: DefaultDict[str, Dict[str, CargoGroup]] = defaultdict(dict)
         for mission in self.missions.values():
@@ -24,13 +26,15 @@ class PendingCargoView:
                 by_system[mission.system][mission.good] = CargoGroup(
                     good=mission.good,
                     count=existing.count + mission.count,
-                    faction=existing.faction if existing.faction == mission.faction else "Multiple factions"
+                    faction=(
+                        existing.faction
+                        if existing.faction == mission.faction
+                        else "Multiple factions"
+                    ),
                 )
             else:
                 by_system[mission.system][mission.good] = CargoGroup(
-                    good=mission.good,
-                    count=mission.count,
-                    faction=mission.faction
+                    good=mission.good, count=mission.count, faction=mission.faction
                 )
 
         print(f"\nPending cargo missions (total: {total_cargo:,} units):\n")
@@ -38,4 +42,4 @@ class PendingCargoView:
             print(f"{system}:")
             for cargo in sorted(goods.values(), key=lambda x: (-x.count, x.good)):
                 print(f"  {cargo.good}: {cargo.count:,} units for {cargo.faction}")
-            print() 
+            print()

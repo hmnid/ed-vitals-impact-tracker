@@ -78,7 +78,9 @@ class MarketEvent(GameEvent):
 class MarketBuyEvent(GameEvent):
     market_id: int = Field(alias="MarketID")
     type: str = Field(alias="Type")
-    type_localised: str = Field(alias="Type_Localised")
+    type_localised: str | None = Field(
+        None, alias="Type_Localised"
+    )  # Some commodities like 'tea' or 'coffee' don't have localised names
     count: int = Field(alias="Count")
     buy_price: int = Field(alias="BuyPrice")
     total_cost: int = Field(alias="TotalCost")
@@ -87,7 +89,9 @@ class MarketBuyEvent(GameEvent):
 class MarketSellEvent(GameEvent):
     market_id: int = Field(alias="MarketID")
     type: str = Field(alias="Type")
-    type_localised: str = Field(alias="Type_Localised")
+    type_localised: str | None = Field(
+        None, alias="Type_Localised"
+    )  # Keeping this optional as MarketBuyEvent just in case even though I don't know for sure
     count: int = Field(alias="Count")
     sell_price: int = Field(alias="SellPrice")
     total_sale: int = Field(alias="TotalSale")

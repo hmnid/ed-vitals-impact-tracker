@@ -31,7 +31,9 @@ def main() -> None:
     )
 
     # Incomplete cargo command
-    pending_cargo_parser = subparsers.add_parser("pending-cargo", help="Show incomplete cargo missions")
+    pending_cargo_parser = subparsers.add_parser(
+        "pending-cargo", help="Show incomplete cargo missions"
+    )
     pending_cargo_parser.add_argument(
         "--depth",
         type=int,
